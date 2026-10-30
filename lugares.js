@@ -34,8 +34,8 @@ window.PRESENTACION = {
     musicaEnVideo: 1,                   // 1 = igual durante el video; bajarlo si el video tiene sonido propio
     finMusica: 121,                     // segundo en que se apaga la canción: llega justo con el final del video
     vozPortada: "audio/voz-portada.mp3",
-    vozFinal: ["audio/voz-video.mp3", "audio/voz-cita.mp3"],   // versículo y, después de una pausa, la cita
-    pausaEntrePartes: 0.8               // segundos entre el versículo y la cita
+    vozFinal: ["audio/voz-nos-toca.mp3", "audio/voz-video.mp3", "audio/voz-cita.mp3"],   // "nos toca a nosotros", el versículo y la cita (con una pausa entre cada parte)
+    pausaEntrePartes: 0.8               // segundos de pausa entre cada parte de la voz del final
   },
 
   escenas: [
