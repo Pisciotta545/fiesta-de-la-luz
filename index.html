@@ -118,16 +118,9 @@
     letter-spacing: .03em;
     color: var(--tenue);
   }
-  #rotulo .fuente {
-    margin: .5rem 0 0;
-    font-size: calc(clamp(13px, min(1.3vw, 3vh), 19px) * var(--texto));
-    letter-spacing: .08em;
-    color: rgba(246, 241, 231, .5);
-  }
   /* halo oscuro: los textos se leen aunque pasen por encima de las líneas del mapa */
-  #rotulo .sub, #rotulo .fuente, .contador span { text-shadow: 0 0 4px #000, 0 0 10px #000, 0 0 18px #000; }
+  #rotulo .sub, .contador span { text-shadow: 0 0 4px #000, 0 0 10px #000, 0 0 18px #000; }
   #rotulo h2 { text-shadow: 0 0 10px #000, 0 0 24px #000; }
-  #rotulo .fuente:empty { display: none; }
   .contadores { display: flex; gap: clamp(1.2rem, 3vw, 2.8rem); }
   .contador { text-align: right; }
   .contador b {
@@ -363,7 +356,6 @@
     <div class="escena">
       <h2 id="r-titulo"></h2>
       <p class="sub" id="r-sub"></p>
-      <p class="fuente" id="r-fuente"></p>
     </div>
     <div class="contadores">
       <div class="contador"><b id="n-luces">0</b><span>ciudades</span></div>
@@ -468,7 +460,7 @@
 
   // Reloj de la presentación (se detiene en pausa)
   let reloj = 0, ultimo = performance.now(), reproduciendo = false;
-  let escena = -1, fase = "portada", indice = 0, proximo = 0, etapa = 0, tDestello = 0;
+  let escena = -1, fase = "portada", indice = 0, proximo = 0, etapa = 0, tDestello = 0, tNombreIglesia = 0;
   const inicioMapa = performance.now();
 
   function vistaDe(v) {
@@ -676,9 +668,11 @@
       lctx.strokeText(texto, izq ? x - 14 : x + 14, y);
       lctx.fillText(texto, izq ? x - 14 : x + 14, y);
     }
-    // nombre de la iglesia, siempre visible
-    if (faro) {
-      lctx.globalAlpha = Math.min(1, faro.edad / 0.4);
+    // nombre de la iglesia: solo en el acercamiento máximo (cuando la voz dice la dirección)
+    const eActual = escena >= 0 ? escenas[escena] : null;
+    const enRajem = eActual && eActual.acercamiento && etapa === eActual.etapas.length - 1;
+    if (faro && enRajem) {
+      lctx.globalAlpha = Math.min(1, (reloj - tNombreIglesia) / 1.2);
       lctx.font = `italic 500 ${Math.round(tam * 1.9)}px "Cormorant Garamond", Georgia, serif`;
       lctx.fillStyle = "#ffd28a";
       lctx.textAlign = "left";
@@ -737,20 +731,19 @@
     $("n-paises").textContent = new Set(on.map((l) => l.pais)).size;
   }
 
-  function mostrarRotulo(titulo, sub, fuente) {
+  function mostrarRotulo(titulo, sub) {
     const caja = document.querySelector("#rotulo .escena");
     caja.classList.add("cambiando");
     setTimeout(() => {
       $("r-titulo").textContent = titulo || "";
       $("r-sub").textContent = sub || "";
-      $("r-fuente").textContent = fuente || "";
       caja.classList.remove("cambiando");
     }, reducir ? 0 : 450);
   }
   function mostrarEscena(i) {
     const e = escenas[i];
-    if (e.acercamiento) mostrarRotulo(e.etapas[etapa].titulo, e.etapas[etapa].subtitulo, e.fuente);
-    else mostrarRotulo(e.titulo, e.subtitulo, e.fuente);
+    if (e.acercamiento) mostrarRotulo(e.etapas[etapa].titulo, e.etapas[etapa].subtitulo);
+    else mostrarRotulo(e.titulo, e.subtitulo);
   }
 
   // Foto de la entrada (si todavía no está, se ve un recuadro que lo indica)
@@ -1070,8 +1063,9 @@
       const e = escenas[escena];
       etapa++;
       if (etapa < e.etapas.length) {
-        mostrarRotulo(e.etapas[etapa].titulo, e.etapas[etapa].subtitulo, e.fuente);
+        mostrarRotulo(e.etapas[etapa].titulo, e.etapas[etapa].subtitulo);
         narrar(e.etapas[etapa].voz);
+        if (etapa === e.etapas.length - 1) tNombreIglesia = reloj;
         fase = "vuelo";
         volar(vistaDe(vistaKm(e.etapas[etapa].km)), true);
       } else {
@@ -1199,7 +1193,6 @@
 
   $("r-titulo").textContent = escenas[0].titulo || "";
   $("r-sub").textContent = escenas[0].subtitulo || "";
-  $("r-fuente").textContent = escenas[0].fuente || "";
   redimensionar();
   actualizarContadores();
   requestAnimationFrame(cuadro);
