@@ -189,6 +189,13 @@ window.PRESENTACION = {
       subtitulo: "275 ciudades, de La Quiaca a Ushuaia",
       fuente: "Fuente: mapas oficiales de Octubrillante (2018 y 2020) y prensa (2025)",
       vista: [-74.5, -55.2, -53.2, -21.6], // oeste, sur, este, norte
+      aprovecharAlto: true,   // usa toda la altura de la pantalla si entra entre el título y los contadores
+      // borde aproximado de Argentina (con Tierra del Fuego y Malvinas): con el zoom tiene que verse entero
+      contorno: [[-65.6, -22.1], [-62.8, -22.0], [-58.0, -24.5], [-54.6, -25.6], [-53.6, -26.2], [-55.7, -27.4], [-57.6, -30.2],
+        [-58.2, -32.4], [-58.4, -34.6], [-56.7, -36.3], [-57.5, -38.0], [-62.2, -38.9], [-62.3, -41.0], [-63.6, -42.6],
+        [-65.0, -45.0], [-67.5, -46.0], [-65.7, -47.8], [-68.9, -51.6], [-68.3, -52.3], [-65.1, -54.7], [-66.5, -55.0],
+        [-68.6, -54.9], [-68.6, -52.6], [-72.3, -51.5], [-73.5, -49.5], [-71.8, -45.0], [-72.1, -42.0], [-71.0, -37.0],
+        [-70.0, -33.0], [-69.6, -28.0], [-68.4, -24.0], [-61.3, -51.2], [-57.7, -51.5], [-59.0, -52.4]],
       ritmo: 0.07,
       pausa: 2,
       lugares: [

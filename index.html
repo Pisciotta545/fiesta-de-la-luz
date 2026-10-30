@@ -463,7 +463,9 @@
   let escena = -1, fase = "portada", indice = 0, proximo = 0, etapa = 0, tDestello = 0, tNombreIglesia = 0;
   const inicioMapa = performance.now();
 
-  function vistaDe(v) {
+  // Encuadre de una vista. Con una escena que tiene "aprovecharAlto" (las altas y angostas, como Argentina),
+  // se agranda todo lo posible mientras su "contorno" se vea entero y no toque el título ni los contadores.
+  function vistaDe(v, esc) {
     const [o, s, e, n] = v;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     const suma = (lon, lat) => {
@@ -481,7 +483,41 @@
     const libre = Math.max(H * 0.5, Math.min(H * 0.94, techo));
     const w = Math.max(x1 - x0, (y1 - y0) * W / libre) * 1.06;
     const k = W / w;
-    return [(x0 + x1) / 2, (y0 + y1) / 2 + (H - libre) / 2 / k, w];
+    const normal = [(x0 + x1) / 2, (y0 + y1) / 2 + (H - libre) / 2 / k, w];
+    if (!esc || !esc.aprovecharAlto || W <= H) return normal;
+
+    const margen = 16, arriba = Math.max(margen, H * 0.03), abajo = H - Math.max(margen, H * 0.03);
+    const textos = [medirRotulo(esc.titulo, esc.subtitulo), document.querySelector("#rotulo .contadores").getBoundingClientRect()];
+    const borde = (esc.contorno || [[o, s], [e, s], [o, n], [e, n]]).map((c) => proj(c)).filter(Boolean);
+    const bw = x1 - x0, bh = y1 - y0;
+    const pasillo = (textos[0].right + textos[1].left) / 2;   // centro del espacio entre el título y los contadores
+    // ¿con esta escala (kk) y la vista centrada en (cx, cy) se ve entero el contorno sin tocar los textos?
+    const entra = (kk, cx, cy) => borde.every(([px, py]) => {
+      const x = cx + (px - (x0 + x1) / 2) * kk, y = cy + (py - (y0 + y1) / 2) * kk;
+      if (x < margen || x > W - margen || y < arriba || y > abajo) return false;
+      return !textos.some((t) => x > t.left - margen && x < t.right + margen && y > t.top - margen && y < t.bottom + margen);
+    });
+    for (let kk = (abajo - arriba) / bh; kk > k; kk *= 0.97) {
+      const cy = arriba + bh * kk / 2;
+      for (const cx of [W / 2, pasillo, (W / 2 + pasillo) / 2]) {
+        if (entra(kk, cx, cy)) return [(x0 + x1) / 2 + (W / 2 - cx) / kk, (y0 + y1) / 2 + (H / 2 - cy) / kk, W / kk];
+      }
+    }
+    return normal;
+  }
+
+  // Lugar que va a ocupar el título de una escena (se mide con una copia invisible, antes de que cambie el texto)
+  function medirRotulo(titulo, sub) {
+    const copia = document.querySelector("#rotulo .escena").cloneNode(true);
+    copia.querySelectorAll("[id]").forEach((n) => n.removeAttribute("id"));
+    copia.classList.remove("cambiando");
+    copia.querySelector("h2").textContent = titulo || "";
+    copia.querySelector(".sub").textContent = sub || "";
+    Object.assign(copia.style, { position: "absolute", left: "0", bottom: "0", visibility: "hidden", transition: "none" });
+    $("rotulo").appendChild(copia);
+    const r = copia.getBoundingClientRect();
+    copia.remove();
+    return r;
   }
 
   // Recuadro de "km" de ancho centrado en la iglesia
@@ -519,7 +555,7 @@
       for (const k in local) trazosLocales[k] = new Path2D(rl(local[k]));
     }
     vuelo = null;
-    cam = vistaDe(vistaActual());
+    cam = vistaDe(vistaActual(), escena >= 0 ? escenas[escena] : null);
     baseSucia = true;
   }
 
@@ -659,14 +695,16 @@
       const texto = l.nombre;
       const ancho = lctx.measureText(texto).width;
       const izq = x + 14 + ancho > W - 16;
+      // siempre dentro de la pantalla (los nombres largos en un celular vertical)
+      const tx = izq ? Math.max(x - 14 - ancho, 16) : x + 14;
       lctx.fillStyle = "#fbf3e2";
-      lctx.textAlign = izq ? "right" : "left";
+      lctx.textAlign = "left";
       // contorno oscuro para que se lea sobre el brillo de las luces
       lctx.lineJoin = "round";
       lctx.lineWidth = 4;
       lctx.strokeStyle = "rgba(0,0,0,0.85)";
-      lctx.strokeText(texto, izq ? x - 14 : x + 14, y);
-      lctx.fillText(texto, izq ? x - 14 : x + 14, y);
+      lctx.strokeText(texto, tx, y);
+      lctx.fillText(texto, tx, y);
     }
     // nombre de la iglesia: solo en el acercamiento máximo (cuando la voz dice la dirección)
     const eActual = escena >= 0 ? escenas[escena] : null;
@@ -714,7 +752,8 @@
     const tam = tamEtiqueta();
     const w = l.nombre.length * tam * 0.56 + 10, h = tam + 8;
     const izq = x + 14 + w > W - 16;
-    const caja = { x0: izq ? x - 14 - w : x + 14, x1: izq ? x - 14 : x + 14 + w, y0: y - h / 2, y1: y + h / 2 };
+    const x0 = izq ? Math.max(x - 14 - w, 16) : x + 14;   // igual que al dibujarlo
+    const caja = { x0, x1: x0 + w, y0: y - h / 2, y1: y + h / 2 };
     for (const o of lugares) {
       if (o === l || !o.etiqueta || o.t === null || reloj - o.t >= 2.2) continue;
       const c = o.caja;
@@ -939,7 +978,7 @@
     mostrarEscena(i);
     actualizarContadores();
     if (escenas[i].acercamiento) volar(vistaDe(vistaKm(escenas[i].etapas[0].km)), true);
-    else volar(vistaDe(escenas[i].vista));
+    else volar(vistaDe(escenas[i].vista, escenas[i]));
     volBase = VOL;
     narrar(escenas[i].acercamiento ? escenas[i].etapas[0].voz : escenas[i].voz);
   }
