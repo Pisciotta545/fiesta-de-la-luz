@@ -660,7 +660,7 @@
     lctx.font = `${pr(400, 500)} ${tam}px Jost, "Century Gothic", system-ui, sans-serif`;
     lctx.textBaseline = "middle";
     lctx.shadowColor = "rgba(0,0,0,0.95)";
-    lctx.shadowBlur = 6;
+    lctx.shadowBlur = 8;
     for (const { l, x, y, edad } of encendidas) {
       const a = edad < 0.25 ? edad / 0.25 : edad > 1.4 ? Math.max(0, 1 - (edad - 1.4) / 0.8) : 1;
       lctx.globalAlpha = a;
@@ -669,6 +669,11 @@
       const izq = x + 14 + ancho > W - 16;
       lctx.fillStyle = "#fbf3e2";
       lctx.textAlign = izq ? "right" : "left";
+      // contorno oscuro para que se lea sobre el brillo de las luces
+      lctx.lineJoin = "round";
+      lctx.lineWidth = 4;
+      lctx.strokeStyle = "rgba(0,0,0,0.85)";
+      lctx.strokeText(texto, izq ? x - 14 : x + 14, y);
       lctx.fillText(texto, izq ? x - 14 : x + 14, y);
     }
     // nombre de la iglesia, siempre visible
@@ -703,7 +708,8 @@
     }
   }
 
-  const tamEtiqueta = () => Math.round(Math.max(12, Math.min(15, W / 110)) * pr(1, 1.2));
+  // nombres de las ciudades: grandes para que se lean en el proyector
+  const tamEtiqueta = () => Math.round(Math.max(16, Math.min(24, W / 75)) * pr(1, 1.2));
 
   // Al encenderse, una ciudad muestra su nombre solo si no se pisa con otro visible
   function decidirEtiqueta(l) {

@@ -30,7 +30,7 @@ window.PRESENTACION = {
   audio: {
     musica: "audio/musica-epica.mp3",   // "Inspiring Epic Motivation Cinematic Trailer" (Pixabay, uso libre)
     volumenMusica: 0.55,                // volumen normal de la música (0 a 1)
-    volumenMusicaConVoz: 0.2,           // mientras habla la voz
+    volumenMusicaConVoz: 0.12,          // mientras habla la voz
     musicaEnVideo: 1,                   // 1 = igual durante el video; bajarlo si el video tiene sonido propio
     finMusica: 121,                     // segundo en que se apaga la canción: llega justo con el final del video
     vozPortada: "audio/voz-portada.mp3",
