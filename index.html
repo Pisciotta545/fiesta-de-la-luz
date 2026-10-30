@@ -16,7 +16,9 @@
     --gutter: clamp(16px, 3.6vw, 52px);
     --display: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
     --ui: "Jost", "Futura", "Century Gothic", system-ui, sans-serif;
+    --texto: 1;   /* tamaño de los rótulos de abajo; en modo proyector, más grandes */
   }
+  :root.proyector { --texto: 1.2; }
   html, body { background: var(--noche); }
   body {
     margin: 0;
@@ -106,22 +108,25 @@
     font-family: var(--display);
     font-style: italic;
     font-weight: 500;
-    font-size: clamp(26px, min(5.4vw, 8.5vh), 84px);
+    font-size: calc(clamp(34px, min(7vw, 12vh), 120px) * var(--texto));
     line-height: .95;
     text-wrap: balance;
   }
   #rotulo .sub {
     margin: .45rem 0 0;
-    font-size: clamp(14px, 1.35vw, 19px);
+    font-size: calc(clamp(18px, min(2.2vw, 4.6vh), 32px) * var(--texto));
     letter-spacing: .03em;
     color: var(--tenue);
   }
   #rotulo .fuente {
     margin: .5rem 0 0;
-    font-size: 11.5px;
+    font-size: calc(clamp(13px, min(1.3vw, 3vh), 19px) * var(--texto));
     letter-spacing: .08em;
-    color: rgba(246, 241, 231, .42);
+    color: rgba(246, 241, 231, .5);
   }
+  /* halo oscuro: los textos se leen aunque pasen por encima de las líneas del mapa */
+  #rotulo .sub, #rotulo .fuente, .contador span { text-shadow: 0 0 4px #000, 0 0 10px #000, 0 0 18px #000; }
+  #rotulo h2 { text-shadow: 0 0 10px #000, 0 0 24px #000; }
   #rotulo .fuente:empty { display: none; }
   .contadores { display: flex; gap: clamp(1.2rem, 3vw, 2.8rem); }
   .contador { text-align: right; }
@@ -129,14 +134,14 @@
     display: block;
     font-family: var(--display);
     font-weight: 500;
-    font-size: clamp(26px, min(4.2vw, 7vh), 64px);
+    font-size: calc(clamp(36px, min(6vw, 11vh), 100px) * var(--texto));
     line-height: 1;
     font-variant-numeric: tabular-nums lining-nums;
     color: var(--vela);
     text-shadow: 0 0 22px rgba(255, 170, 80, .45);
   }
   .contador span {
-    font-size: 11.5px;
+    font-size: calc(clamp(13px, min(1.4vw, 3.2vh), 20px) * var(--texto));
     letter-spacing: .2em;
     text-transform: uppercase;
     color: var(--tenue);
@@ -454,6 +459,7 @@
   let proyector = /proyector/.test(location.hash);
   try { if (localStorage.getItem("fdl-proyector") === "1") proyector = true; } catch (e) { /* sin almacenamiento */ }
   const pr = (normal, fuerte) => (proyector ? fuerte : normal);
+  document.documentElement.classList.toggle("proyector", proyector);
 
   let W, H, dpr, proj, trazos = {};
   let cam = [0, 0, 1];          // centro x, centro y, ancho visible (en px de proyección base)
@@ -1101,6 +1107,7 @@
 
   function modoProyector(si) {
     proyector = si;
+    document.documentElement.classList.toggle("proyector", si);
     try { localStorage.setItem("fdl-proyector", si ? "1" : "0"); } catch (e) { /* sin almacenamiento */ }
     $("b-proyector").setAttribute("aria-pressed", String(si));
     baseSucia = true;
